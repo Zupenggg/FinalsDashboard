@@ -23,6 +23,7 @@ DATA_FILE = os.environ.get(
     "DATA_FILE",
     os.path.join(DATA_FOLDER, "data.json"),
 )
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
@@ -57,15 +58,12 @@ if os.environ.get("RENDER") == "true":
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 
-def ensure_data_file():
-    if os.path.exists(DATA_FILE):
-        return
-
+def initial_data():
     admin_username = os.environ.get("ADMIN_USERNAME", "").strip()
     admin_password = os.environ.get("ADMIN_PASSWORD", "")
     if not admin_username or len(admin_password) < 12:
         raise RuntimeError(
-            "The data file is missing. Set ADMIN_USERNAME and an "
+            "The data store is empty. Set ADMIN_USERNAME and an "
             "ADMIN_PASSWORD of at least 12 characters to initialize it."
         )
     if not re.fullmatch(r"[A-Za-z0-9_.-]{3,30}", admin_username):
@@ -74,8 +72,7 @@ def ensure_data_file():
             "or underscores."
         )
 
-    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
-    initial_data = {
+    return {
         "students": [],
         "teachers": [],
         "courses": [],
@@ -101,9 +98,54 @@ def ensure_data_file():
         "login_events": [],
     }
 
+
+def ensure_database():
+    import psycopg
+    from psycopg.types.json import Jsonb
+
+    with psycopg.connect(DATABASE_URL) as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS dashboard_state (
+                id SMALLINT PRIMARY KEY CHECK (id = 1),
+                payload JSONB NOT NULL
+            )
+            """
+        )
+        stored = connection.execute(
+            "SELECT payload FROM dashboard_state WHERE id = 1"
+        ).fetchone()
+        if stored is None:
+            connection.execute(
+                "INSERT INTO dashboard_state (id, payload) VALUES (1, %s)",
+                (Jsonb(initial_data()),),
+            )
+        else:
+            data = stored[0]
+            admin = next(
+                (user for user in data.get("users", [])
+                 if user.get("username", "").casefold() == "admin"),
+                None,
+            )
+            if admin is not None and admin.get("role") != "admin":
+                admin["role"] = "admin"
+                connection.execute(
+                    "UPDATE dashboard_state SET payload = %s WHERE id = 1",
+                    (Jsonb(data),),
+                )
+
+
+def ensure_data_file():
+    if DATABASE_URL:
+        ensure_database()
+        return
+    if os.path.exists(DATA_FILE):
+        return
+
+    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     try:
         with open(DATA_FILE, "x", encoding="utf-8") as file:
-            json.dump(initial_data, file, indent=4)
+            json.dump(initial_data(), file, indent=4)
     except FileExistsError:
         return
 
@@ -112,10 +154,37 @@ ensure_data_file()
 
 
 def load_data():
+    if DATABASE_URL:
+        import psycopg
+
+        with psycopg.connect(DATABASE_URL) as connection:
+            stored = connection.execute(
+                "SELECT payload FROM dashboard_state WHERE id = 1"
+            ).fetchone()
+        if stored is None:
+            raise RuntimeError("The dashboard database has not been initialized.")
+        return stored[0]
     with open(DATA_FILE, "r") as file:
         return json.load(file)
 
+
 def save_data(data):
+    if DATABASE_URL:
+        import psycopg
+        from psycopg.types.json import Jsonb
+
+        with psycopg.connect(DATABASE_URL) as connection:
+            result = connection.execute(
+                """
+                UPDATE dashboard_state
+                SET payload = %s
+                WHERE id = 1
+                """,
+                (Jsonb(data),),
+            )
+        if result.rowcount != 1:
+            raise RuntimeError("The dashboard database has not been initialized.")
+        return
     with open(DATA_FILE, "w") as file:
         json.dump(data, file, indent=4)
 
