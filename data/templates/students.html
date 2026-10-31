@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students | EduManage</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+
+    <p class="menu-title">MAIN MENU</p>
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}" class="active">♙ Students</a>
+    <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+    <a href="{{ url_for('courses') }}">▤ Courses</a>
+    <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+    <a href="{{ url_for('reports') }}">▧ Reports</a>
+
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    {% if is_admin %}<a href="{{ url_for('settings') }}">⚙ Settings</a>{% endif %}
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Version 1.0</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>Students</h1>
+            <p>Add, search, and manage student records.</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="panel student-form-panel">
+        {% if can_manage %}
+        <div class="panel-header">
+            <h3>{{ "Edit Student" if editing else "Add Student" }}</h3>
+            {% if editing %}
+            <a href="{{ url_for('students') }}">Cancel</a>
+            {% endif %}
+        </div>
+
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="student-form" method="post" action="{{ url_for('students') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            {% if editing %}
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="original_id" value="{{ form_student.id }}">
+            {% else %}
+            <input type="hidden" name="action" value="add">
+            {% endif %}
+
+            <label>
+                Student ID
+                <input type="text" name="id" value="{{ form_student.id }}" required>
+            </label>
+            <label>
+                Student Name
+                <input type="text" name="name" value="{{ form_student.name }}" required>
+            </label>
+            <label>
+                Course
+                <input type="text" name="course" value="{{ form_student.course }}" required>
+            </label>
+            <button type="submit" class="button-primary">
+                {{ "Save Changes" if editing else "Add Student" }}
+            </button>
+        </form>
+        {% else %}
+        <p class="form-help">You have read-only access. Contact the administrator to manage student records.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Student Records ({{ students|length }})</h3>
+            <form class="search-form" method="get" action="{{ url_for('students') }}">
+                <label class="visually-hidden" for="student-search">Search students</label>
+                <input id="student-search" type="search" name="q" value="{{ query }}"
+                       placeholder="Search ID, name, or course">
+                <button type="submit">Search</button>
+                {% if query %}
+                <a href="{{ url_for('students') }}">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        {% if is_admin %}<th>Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.id }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.course }}</td>
+                        {% if is_admin %}<td class="student-actions">
+                            <a class="button-secondary"
+                               href="{{ url_for('students', edit=student.id) }}">Edit</a>
+                            <form method="post" action="{{ url_for('students') }}"
+                                  onsubmit="return confirm('Delete this student record?');">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="{{ student.id }}">
+                                <button type="submit" class="button-danger">Delete</button>
+                            </form>
+                        </td>{% endif %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ 4 if is_admin else 3 }}" class="empty">
+                            {% if query %}No students match your search.{% else %}No students registered yet.{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

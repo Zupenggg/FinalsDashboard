@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+
+    <p class="menu-title">MAIN MENU</p>
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}">♙ Students</a>
+    <a href="{{ url_for('teachers') }}" {% if resource == "teachers" %}class="active"{% endif %}>♙ Teachers</a>
+    <a href="{{ url_for('courses') }}" {% if resource == "courses" %}class="active"{% endif %}>▤ Courses</a>
+    <a href="{{ url_for('attendance') }}" {% if resource == "attendance" %}class="active"{% endif %}>☑ Attendance</a>
+    <a href="{{ url_for('reports') }}">▧ Reports</a>
+
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    {% if is_admin %}<a href="{{ url_for('settings') }}">⚙ Settings</a>{% endif %}
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Version 1.0</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>{{ description }}</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="panel student-form-panel">
+        {% if can_manage %}
+        <div class="panel-header">
+            <h3>{{ "Edit " ~ record_label if editing else "Add " ~ record_label }}</h3>
+            {% if editing %}
+            <a href="{{ url_for(resource) }}">Cancel</a>
+            {% endif %}
+        </div>
+
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="student-form record-form" method="post" action="{{ url_for(resource) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            {% if editing %}
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="original_id" value="{{ form_record.id }}">
+            {% else %}
+            <input type="hidden" name="action" value="add">
+            {% endif %}
+            {% for field in fields %}
+            <label>
+                {{ field.label }}
+                {% if field.type == "select" %}
+                <select name="{{ field.name }}" required>
+                    <option value="">Select {{ field.label|lower }}</option>
+                    {% for option in field.options %}
+                    <option value="{{ option }}" {% if form_record[field.name] == option %}selected{% endif %}>{{ option }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
+                <input type="{{ field.type }}" name="{{ field.name }}"
+                       value="{{ form_record[field.name] }}" required>
+                {% endif %}
+            </label>
+            {% endfor %}
+            <button type="submit" class="button-primary">
+                {{ "Save Changes" if editing else "Add Record" }}
+            </button>
+        </form>
+        {% else %}
+        <div class="panel-header"><h3>{{ title }} Records</h3></div>
+        <p class="form-help">You have read-only access. Contact the administrator to manage records.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>{{ title }} Records ({{ records|length }})</h3>
+            <form class="search-form" method="get" action="{{ url_for(resource) }}">
+                <label class="visually-hidden" for="record-search">Search {{ title|lower }}</label>
+                <input id="record-search" type="search" name="q" value="{{ query }}"
+                       placeholder="Search records">
+                <button type="submit">Search</button>
+                {% if query %}
+                <a href="{{ url_for(resource) }}">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for field in fields %}
+                        <th>{{ field.label }}</th>
+                        {% endfor %}
+                        {% if is_admin %}<th>Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        {% for field in fields %}
+                        <td>{{ record.get(field.name, "") }}</td>
+                        {% endfor %}
+                        {% if is_admin %}<td class="student-actions">
+                            <a class="button-secondary"
+                               href="{{ url_for(resource, edit=record.id) }}">Edit</a>
+                            <form method="post" action="{{ url_for(resource) }}"
+                                  onsubmit="return confirm('Delete this record?');">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="{{ record.id }}">
+                                <button type="submit" class="button-danger">Delete</button>
+                            </form>
+                        </td>{% endif %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ fields|length + (1 if is_admin else 0) }}" class="empty">
+                            {% if query %}No records match your search.{% else %}No records yet.{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

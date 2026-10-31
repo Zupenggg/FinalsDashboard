@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<main class="login-page">
+    <section class="panel login-panel">
+        <h1>{{ site_settings.get("site_name", "EduManage") }}</h1>
+        <p class="login-intro">Sign in to continue to the school dashboard.</p>
+
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+        {% if request.args.get("registered") == "1" %}
+        <p class="form-success" role="status">Account created. You can now log in.</p>
+        {% endif %}
+
+        <form class="login-form" method="post" action="{{ url_for('login') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <label>
+                Username
+                <input type="text" name="username" autocomplete="username" required autofocus>
+            </label>
+            <label>
+                Password
+                <input type="password" name="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit" class="button-primary">Log In</button>
+        </form>
+
+        <p class="login-hint">Use your account credentials. You can change your password after signing in from Profile.</p>
+        <p class="login-hint">New here? <a href="{{ url_for('register') }}">Create an account</a>.</p>
+    </section>
+</main>
+</body>
+</html>

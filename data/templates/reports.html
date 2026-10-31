@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+
+    <p class="menu-title">MAIN MENU</p>
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}">♙ Students</a>
+    <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+    <a href="{{ url_for('courses') }}">▤ Courses</a>
+    <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+    <a href="{{ url_for('reports') }}" class="active">▧ Reports</a>
+
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    {% if is_admin %}<a href="{{ url_for('settings') }}">⚙ Settings</a>{% endif %}
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Version 1.0</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>Reports</h1>
+            <p>Current school records and attendance summary.</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="stats report-stats">
+        <div class="stat-card">
+            <div class="stat-icon blue">♙</div>
+            <p>Total Students</p>
+            <h2>{{ students|length }}</h2>
+            <small>Registered students</small>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">♟</div>
+            <p>Total Teachers</p>
+            <h2>{{ teachers|length }}</h2>
+            <small>Registered teachers</small>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">▤</div>
+            <p>Total Courses</p>
+            <h2>{{ courses|length }}</h2>
+            <small>Available courses</small>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">☑</div>
+            <p>Attendance Rate</p>
+            <h2>{{ present_rate }}%</h2>
+            <small>Present records of all attendance</small>
+        </div>
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Attendance Summary</h3>
+            <a href="{{ url_for('attendance') }}">Manage Attendance</a>
+        </div>
+        <div class="report-status-grid">
+            <div class="summary-item">
+                <span>Present</span>
+                <strong>{{ status_counts["Present"] }}</strong>
+            </div>
+            <div class="summary-item">
+                <span>Absent</span>
+                <strong>{{ status_counts["Absent"] }}</strong>
+            </div>
+            <div class="summary-item">
+                <span>Late</span>
+                <strong>{{ status_counts["Late"] }}</strong>
+            </div>
+            <div class="summary-item">
+                <span>Total Records</span>
+                <strong>{{ attendance|length }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Attendance Records</h3>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance|sort(attribute="date", reverse=true) %}
+                    <tr>
+                        <td>{{ record.get("date", "") }}</td>
+                        <td>{{ record.get("student_id", "") }}</td>
+                        <td>{{ record.get("student_name", "") }}</td>
+                        <td>{{ record.get("course", "") }}</td>
+                        <td>{{ record.get("status", "") }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty">No attendance records to report yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Limited | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<main class="login-page">
+    <section class="panel login-panel">
+        <h1>{{ site_settings.get("site_name", "EduManage") }}</h1>
+        <h2 class="limited-heading">Access is limited</h2>
+        <p class="login-intro">
+            You are signed in as <strong>{{ username }}</strong>. Your account can access its profile only.
+            School records and reports are restricted to the administrator.
+        </p>
+        <div class="limited-actions">
+            <a class="button-primary" href="{{ url_for('profile') }}">View My Profile</a>
+            <a class="button-secondary" href="{{ url_for('logout') }}">Log Out</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

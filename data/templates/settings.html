@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+    <p class="menu-title">MAIN MENU</p>
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}">♙ Students</a>
+    <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+    <a href="{{ url_for('courses') }}">▤ Courses</a>
+    <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+    <a href="{{ url_for('reports') }}">▧ Reports</a>
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    <a href="{{ url_for('settings') }}" class="active">⚙ Settings</a>
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Version 1.0</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>Settings</h1>
+            <p>Configure the school name and dashboard appearance.</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="panel student-form-panel">
+        <div class="panel-header"><h3>General Settings</h3></div>
+        {% if updated %}
+        <p class="form-success" role="status">Settings saved successfully.</p>
+        {% endif %}
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="account-form" method="post" action="{{ url_for('update_settings') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <label>
+                School Name
+                <input type="text" name="site_name" value="{{ settings.site_name }}" required>
+            </label>
+            <label>
+                Dashboard Theme
+                <select name="theme" required>
+                    <option value="light" {% if settings.theme == "light" %}selected{% endif %}>Light</option>
+                    <option value="dark" {% if settings.theme == "dark" %}selected{% endif %}>Dark</option>
+                </select>
+            </label>
+            <button type="submit" class="button-primary">Save Settings</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

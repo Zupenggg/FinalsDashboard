@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+
+    <p class="menu-title">MAIN MENU</p>
+    <nav>
+        <a href="{{ url_for('home') }}" class="active">▦ Dashboard</a>
+        <a href="{{ url_for('students') }}">♙ Students</a>
+        <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+        <a href="{{ url_for('courses') }}">▤ Courses</a>
+        <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+        <a href="{{ url_for('reports') }}">▧ Reports</a>
+    </nav>
+
+    <p class="menu-title">SYSTEM</p>
+
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    {% if is_admin %}<a href="{{ url_for('settings') }}">⚙ Settings</a>{% endif %}
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Version 1.0</small>
+    </div>
+</div>
+
+<div class="main-content">
+
+    <header class="topbar">
+        <div>
+            <h1>Dashboard Overview</h1>
+            <p>Welcome back, {{ profile_data.get("name", "Administrator") }}!</p>
+        </div>
+
+        <div class="admin-info">
+            <div class="avatar">A</div>
+            <div>
+                <strong>{{ profile_data.get("name", "Administrator") }}</strong>
+                <small>Super Admin</small>
+            </div>
+        </div>
+    </header>
+
+    <section class="welcome">
+        <div>
+            <h2>Welcome to EduManage!</h2>
+            <p>Manage your school activities in one place.</p>
+        </div>
+        <div class="welcome-icon">🎓</div>
+    </section>
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <div class="stat-icon blue">♙</div>
+            <p>Total Students</p>
+            <h2>{{ data.students|length }}</h2>
+            <small>Registered students</small>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon purple">♟</div>
+            <p>Total Teachers</p>
+            <h2>{{ data.teachers|length }}</h2>
+            <small>Registered teachers</small>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon orange">▤</div>
+            <p>Total Courses</p>
+            <h2>{{ data.courses|length }}</h2>
+            <small>Available courses</small>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">☑</div>
+            <p>Attendance Records</p>
+            <h2>{{ data.attendance|length }}</h2>
+            <small>Total records</small>
+        </div>
+
+    </section>
+
+    <section class="dashboard-grid">
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>School Overview</h3>
+                <span>Statistics</span>
+            </div>
+
+            <div class="chart-placeholder">
+                <div class="bar" style="height:35%">
+                    <span>Mon</span>
+                </div>
+                <div class="bar" style="height:55%">
+                    <span>Tue</span>
+                </div>
+                <div class="bar" style="height:45%">
+                    <span>Wed</span>
+                </div>
+                <div class="bar" style="height:75%">
+                    <span>Thu</span>
+                </div>
+                <div class="bar" style="height:60%">
+                    <span>Fri</span>
+                </div>
+                <div class="bar" style="height:90%">
+                    <span>Sat</span>
+                </div>
+            </div>
+            <small class="chart-note">
+                Sample weekly activity chart
+            </small>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <h3>Quick Summary</h3>
+            </div>
+
+            <div class="summary-item">
+                <span>Students</span>
+                <strong>{{ data.students|length }}</strong>
+            </div>
+
+            <div class="summary-item">
+                <span>Teachers</span>
+                <strong>{{ data.teachers|length }}</strong>
+            </div>
+
+            <div class="summary-item">
+                <span>Courses</span>
+                <strong>{{ data.courses|length }}</strong>
+            </div>
+
+            <div class="summary-item">
+                <span>Attendance</span>
+                <strong>{{ data.attendance|length }}</strong>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Recent Students</h3>
+            <a href="{{ url_for('students') }}">View All</a>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for student in data.students[-5:]|reverse %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>{{ student.id }}</td>
+                        <td>{{ student.course }}</td>
+                        <td><span class="status active-status">Active</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="empty">
+                            No students registered yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 EduManage | School Management System</p>
+    </footer>
+
+</div>
+
+</body>
+</html>

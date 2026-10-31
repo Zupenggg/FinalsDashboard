@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<main class="login-page">
+    <section class="panel login-panel">
+        <h1>Create an Account</h1>
+        <p class="login-intro">Register to access {{ site_settings.get("site_name", "EduManage") }}.</p>
+
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="login-form" method="post" action="{{ url_for('register') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <label>
+                Full Name
+                <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label>
+                Email Address
+                <input type="email" name="email" autocomplete="email" required>
+            </label>
+            <label>
+                Username
+                <input type="text" name="username" minlength="3" maxlength="30"
+                       pattern="[A-Za-z0-9_.-]+" autocomplete="username" required>
+            </label>
+            <label>
+                Password
+                <input type="password" name="password" minlength="8"
+                       autocomplete="new-password" required>
+            </label>
+            <label>
+                Confirm Password
+                <input type="password" name="confirm_password" minlength="8"
+                       autocomplete="new-password" required>
+            </label>
+            <button type="submit" class="button-primary">Register</button>
+        </form>
+
+        <p class="login-hint">Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+        <p class="login-hint">New accounts have read-only access. The administrator can review registered users and login attempts.</p>
+    </section>
+</main>
+</body>
+</html>

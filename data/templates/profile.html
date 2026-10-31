@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+    <p class="menu-title">MAIN MENU</p>
+    {% if is_admin %}
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}">♙ Students</a>
+    <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+    <a href="{{ url_for('courses') }}">▤ Courses</a>
+    <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+    <a href="{{ url_for('reports') }}">▧ Reports</a>
+    {% endif %}
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}" class="active">♙ Profile</a>
+    {% if is_admin %}<a href="{{ url_for('settings') }}">⚙ Settings</a>{% endif %}
+    {% if is_admin %}<a href="{{ url_for('access') }}">♙ User Access</a>{% endif %}
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Signed in as {{ username }}</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>Profile</h1>
+            <p>Update your account details and password.</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="panel student-form-panel">
+        <div class="panel-header"><h3>Account Profile</h3></div>
+        {% if updated %}
+        <p class="form-success" role="status">Profile updated successfully.</p>
+        {% endif %}
+        {% if error %}
+        <p class="form-error" role="alert">{{ error }}</p>
+        {% endif %}
+
+        <form class="account-form" method="post" action="{{ url_for('update_profile') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <label>
+                Full Name
+                <input type="text" name="name" value="{{ profile.name }}" required>
+            </label>
+            <label>
+                Email Address
+                <input type="email" name="email" value="{{ profile.email }}" required>
+            </label>
+
+            <h3 class="form-section-heading">Change Password</h3>
+            <p class="form-help">Leave the password fields blank if you do not want to change it.</p>
+            <label>
+                Current Password
+                <input type="password" name="current_password" autocomplete="current-password">
+            </label>
+            <label>
+                New Password
+                <input type="password" name="new_password" minlength="8" autocomplete="new-password">
+            </label>
+            <label>
+                Confirm New Password
+                <input type="password" name="confirm_password" minlength="8" autocomplete="new-password">
+            </label>
+            <button type="submit" class="button-primary">Save Profile</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

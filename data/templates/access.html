@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Access | {{ site_settings.get("site_name", "EduManage") }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ theme_class }}">
+<div class="sidebar">
+    <div class="logo">
+        <h2>{{ site_settings.get("site_name", "EduManage") }}</h2>
+        <p>School Management</p>
+    </div>
+    <p class="menu-title">MAIN MENU</p>
+    <a href="{{ url_for('home') }}">▦ Dashboard</a>
+    <a href="{{ url_for('students') }}">♙ Students</a>
+    <a href="{{ url_for('teachers') }}">♙ Teachers</a>
+    <a href="{{ url_for('courses') }}">▤ Courses</a>
+    <a href="{{ url_for('attendance') }}">☑ Attendance</a>
+    <a href="{{ url_for('reports') }}">▧ Reports</a>
+    <p class="menu-title">SYSTEM</p>
+    <a href="{{ url_for('profile') }}">♙ Profile</a>
+    <a href="{{ url_for('settings') }}">⚙ Settings</a>
+    <a href="{{ url_for('access') }}" class="active">♙ User Access</a>
+    <a href="{{ url_for('logout') }}" class="logout-btn">Log Out</a>
+    <div class="sidebar-footer">
+        <p>Admin Dashboard</p>
+        <small>Access monitoring</small>
+    </div>
+</div>
+
+<main class="main-content">
+    <header class="topbar">
+        <div>
+            <h1>User Access</h1>
+            <p>Edit accounts and review the latest login attempts.</p>
+        </div>
+        <a href="{{ url_for('home') }}">Back to Dashboard</a>
+    </header>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Registered Accounts ({{ users|length }})</h3>
+        </div>
+        {% if request.args.get("updated") %}
+        <p class="form-success" role="status">Account {{ request.args.get("updated") }} was updated.</p>
+        {% endif %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Name</th><th>Username</th><th>Email</th><th>Role / Status</th><th>Registered</th><th>Admin Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {% if user.get("username", "").casefold() == "admin" %}
+                            {{ user.get("name", "Administrator") }}
+                            {% else %}
+                            <input class="access-input" form="save-user-{{ loop.index }}" type="text" name="name"
+                                   value="{{ user.get('name', '') }}" aria-label="Name for {{ user.get('username', '') }}" required>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.get("username", "") }}</td>
+                        <td>
+                            {% if user.get("username", "").casefold() == "admin" %}
+                            {{ user.get("email", "") }}
+                            {% else %}
+                            <input class="access-input" form="save-user-{{ loop.index }}" type="email" name="email"
+                                   value="{{ user.get('email', '') }}" aria-label="Email for {{ user.get('username', '') }}" required>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ "admin" if user.get("username", "").casefold() == "admin" else user.get("role", "user") }}
+                            {% if user.get("username", "").casefold() != "admin" %}
+                            <br><span class="status {{ 'active-status' if user.get('active', true) else 'failed-status' }}">
+                                {{ "Active" if user.get("active", true) else "Disabled" }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.get("created_at", "Existing account") }}</td>
+                        <td class="student-actions">
+                            {% if user.get("username", "").casefold() != "admin" %}
+                            <form id="save-user-{{ loop.index }}" method="post"
+                                  action="{{ url_for('update_access_user', username=user.get('username', '')) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <input class="access-input" type="password" name="new_password" minlength="8"
+                                       placeholder="New password (optional)"
+                                       aria-label="Optional new password for {{ user.get('username', '') }}">
+                                <button type="submit" class="button-secondary" name="action" value="save">Save</button>
+                            </form>
+                            <form method="post"
+                                  action="{{ url_for('update_access_user', username=user.get('username', '')) }}">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                                <button type="submit" class="{{ 'button-danger' if user.get('active', true) else 'button-secondary' }}"
+                                        name="action" value="toggle">
+                                    {{ "Disable" if user.get("active", true) else "Enable" }}
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="form-help">Primary admin</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="empty">No accounts registered.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel recent-panel">
+        <div class="panel-header">
+            <h3>Recent Login Attempts ({{ events|length }})</h3>
+        </div>
+        <p class="form-help">Shows the latest 200 successful and failed attempts, including the recorded IP address.</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Date and Time (UTC)</th><th>Username</th><th>IP Address</th><th>Result</th></tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.get("timestamp", "") }}</td>
+                        <td>{{ event.get("username", "") }}</td>
+                        <td>{{ event.get("ip_address", "unknown") }}</td>
+                        <td>
+                            {% if event.get("success") %}
+                            <span class="status active-status">Successful</span>
+                            {% else %}
+                            <span class="status failed-status">Failed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="empty">No login attempts recorded yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>
