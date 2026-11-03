@@ -106,7 +106,7 @@
                         <th>Student ID</th>
                         <th>Student Name</th>
                         <th>Course</th>
-                        {% if is_admin %}<th>Actions</th>{% endif %}
+                        {% if can_manage %}<th>Actions</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -115,7 +115,7 @@
                         <td>{{ student.id }}</td>
                         <td>{{ student.name }}</td>
                         <td>{{ student.course }}</td>
-                        {% if is_admin %}<td class="student-actions">
+                        {% if can_manage %}<td class="student-actions">
                             <a class="button-secondary"
                                href="{{ url_for('students', edit=student.id) }}">Edit</a>
                             <form method="post" action="{{ url_for('students') }}"
@@ -129,7 +129,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="{{ 4 if is_admin else 3 }}" class="empty">
+                        <td colspan="{{ 4 if can_manage else 3 }}" class="empty">
                             {% if query %}No students match your search.{% else %}No students registered yet.{% endif %}
                         </td>
                     </tr>
