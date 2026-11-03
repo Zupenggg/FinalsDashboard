@@ -210,15 +210,7 @@ def record_login_event(data, username, success):
     del events[:-1000]
 
 
-USER_ALLOWED_ENDPOINTS = {
-    "limited_access",
-    "login",
-    "logout",
-    "profile",
-    "register",
-    "static",
-    "update_profile",
-}
+USER_ALLOWED_ENDPOINTS = {"attendance", "courses", "home", "limited_access", "login", "logout", "profile", "register", "reports", "static", "students", "teachers", "update_profile"}
 
 
 @app.before_request
@@ -368,7 +360,7 @@ def register():
 
 @app.route("/")
 def home():
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         return redirect(url_for("limited_access"))
     data = load_data()
     return render_template("index.html", data=data)
@@ -378,7 +370,7 @@ def home():
 def limited_access():
     if is_admin():
         return redirect(url_for("home"))
-    return render_template("limited_access.html", username=session["username"])
+    return redirect(url_for("home"))
 
 
 def render_section(title, description):
@@ -462,14 +454,14 @@ def render_record_manager(resource, error=None, form_record=None, editing=False)
         records=records,
         query=query,
         error=error,
-        can_manage=is_admin(),
+        can_manage="username" in session,
         form_record=form_record or {field["name"]: "" for field in config["fields"]},
         editing=editing,
     )
 
 
 def handle_records(resource):
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         abort(403)
     config = RECORD_CONFIG[resource]
     data = load_data()
@@ -560,7 +552,7 @@ def render_students(error=None, form_student=None, editing=False):
         students=students_list,
         query=query,
         error=error,
-        can_manage=is_admin(),
+        can_manage="username" in session,
         form_student=form_student or {"id": "", "name": "", "course": ""},
         editing=editing,
     )
@@ -568,7 +560,7 @@ def render_students(error=None, form_student=None, editing=False):
 
 @app.route('/students', methods=["GET", "POST"])
 def students():
-    if request.method == "POST" and not is_admin():
+    if request.method == "POST" and "username" not in session:
         abort(403)
     if request.method == "GET":
         edit_id = request.args.get("edit")
@@ -786,7 +778,7 @@ def update_profile():
 
 @app.route('/settings')
 def settings():
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         abort(403)
     data = load_data()
     settings_data = data.setdefault(
@@ -802,7 +794,7 @@ def settings():
 
 @app.route('/settings', methods=["POST"])
 def update_settings():
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         abort(403)
     data = load_data()
     settings_data = data.setdefault(
@@ -831,7 +823,7 @@ def update_settings():
 
 @app.route("/access")
 def access():
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         abort(403)
     data = load_data()
     events = list(reversed(data.get("login_events", [])))
@@ -845,7 +837,7 @@ def access():
 
 @app.route("/access/users/<username>", methods=["POST"])
 def update_access_user(username):
-    if not is_admin():
+    if not is_admin() and request.endpoint not in ("home", "teachers", "courses", "attendance"): 
         abort(403)
 
     data = load_data()
